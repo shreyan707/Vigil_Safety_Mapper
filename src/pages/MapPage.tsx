@@ -180,7 +180,7 @@ export default function MapPage() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <LocationMarker />
-          {filteredServices.map(service => (
+          {filteredServices.filter(s => s.lat != null && s.lng != null).map(service => (
             <Marker 
               key={service.id} 
               position={[service.lat, service.lng]}
