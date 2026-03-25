@@ -7,6 +7,7 @@ import MapPage from './pages/MapPage';
 import ServicesPage from './pages/ServicesPage';
 import ServiceDetailPage from './pages/ServiceDetailPage';
 import RequestPage from './pages/RequestPage';
+import TrackingSearchPage from './pages/TrackingSearchPage';
 import TrackPage from './pages/TrackPage';
 import AboutPage from './pages/AboutPage';
 import ResourcesPage from './pages/ResourcesPage';
@@ -32,6 +33,7 @@ function App() {
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/services/:id" element={<ServiceDetailPage />} />
         <Route path="/request/new" element={<RequestPage />} />
+        <Route path="/track" element={<TrackingSearchPage />} />
         <Route path="/request/track/:id" element={<TrackPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
