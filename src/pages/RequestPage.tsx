@@ -117,7 +117,7 @@ export default function RequestPage() {
                 <input 
                   required
                   type="text"
-                  placeholder="e.g. Connaught Place, New Delhi"
+                  placeholder="e.g. MG Road, Bengaluru"
                   className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 font-medium"
                   value={formData.location}
                   onChange={e => setFormData({...formData, location: e.target.value})}

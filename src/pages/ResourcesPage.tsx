@@ -117,7 +117,7 @@ export default function ResourcesPage() {
               <div className="space-y-4">
                 {[
                   { name: 'National Commission for Women', url: '#' },
-                  { name: 'Delhi Police Women Cell', url: '#' },
+                  { name: 'National Women Helpline', url: '#' },
                   { name: 'Ministry of WCD', url: '#' }
                 ].map((link, idx) => (
                   <a 

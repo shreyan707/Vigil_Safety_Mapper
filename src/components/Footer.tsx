@@ -16,7 +16,7 @@ export default function Footer() {
               <span className="text-xl font-bold tracking-tight">VIGIL</span>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed">
-              A compassionate initiative dedicated to making Delhi a safer city for every woman through technology and community support.
+              A compassionate initiative dedicated to making India a safer place for every woman through technology and community support.
             </p>
           </div>
 
@@ -68,7 +68,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-rose-500" />
-                <span className="text-slate-400 text-sm">100 - <span className="text-white font-bold">Delhi Police</span></span>
+                <span className="text-slate-400 text-sm">100 - <span className="text-white font-bold">Police Emergency</span></span>
               </li>
             </ul>
           </div>

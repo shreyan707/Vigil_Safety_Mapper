@@ -32,19 +32,19 @@ const TESTIMONIALS = [
     category: 'Legal Aid',
     quote: "I was hesitant at first, but the anonymous request feature helped me get legal counsel without facing any social pressure. They were so professional.",
     user: 'Verified User',
-    location: 'South Delhi'
+    location: 'South Mumbai'
   },
   {
     category: 'Harassment',
     quote: "The emergency map helped me find a safe shelter during a late-night commute crisis. The speed of response from the helpline was incredible.",
     user: 'Verified User',
-    location: 'West Delhi'
+    location: 'Bengaluru'
   },
   {
     category: 'Counseling',
     quote: "Finding a community that understands and supports you without judgment is life-changing. Thank you VIGIL for being there.",
     user: 'Verified User',
-    location: 'North Delhi'
+    location: 'New Delhi'
   }
 ];
 
@@ -65,14 +65,14 @@ export default function LandingPage() {
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-bold uppercase tracking-wider mb-6">
                 <div className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
-                Delhi 24/7 Support
+                India 24/7 Support
               </div>
               <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1] mb-6">
                 You Are Not Alone.<br />
                 <span className="text-rose-600">Help is Here.</span>
               </h1>
               <p className="text-lg text-slate-600 mb-10 max-w-lg leading-relaxed">
-                Dedicated emergency support and service mapping for women in Delhi. 
+                Dedicated emergency support and service mapping for women in India. 
                 Immediate intervention is just a click or call away.
               </p>
 
@@ -143,7 +143,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-4">Find Help Now</h3>
               <p className="text-slate-600 mb-8 leading-relaxed">
-                Access our real-time interactive map of Delhi safety services including safe zones, NGOs and police posts.
+                Access our real-time interactive map of India's safety services including safe zones, NGOs and police posts.
               </p>
               <Link to="/map" className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2">
                 Open Safety Map
@@ -174,9 +174,9 @@ export default function LandingPage() {
       {/* Services Map Section - NOW WITH ASCII SHIELD */}
       <section id="services" className="py-24 bg-rose-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-black text-slate-900 mb-4">Services Across Delhi</h2>
+          <h2 className="text-4xl font-black text-slate-900 mb-4">Services Across India</h2>
           <p className="text-slate-600 mb-16 max-w-2xl mx-auto">
-            Our map covers over 150+ locations verified for safety and support across the Delhi NCR region.
+            Our map covers over 150+ locations verified for safety and support across the country.
           </p>
 
           <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white bg-rose-100 h-[500px] flex items-center justify-center">
@@ -223,7 +223,7 @@ export default function LandingPage() {
             <div>
               <h2 className="text-4xl font-black text-slate-900 mb-4">Community Voices</h2>
               <p className="text-slate-600 max-w-xl">
-                Stories of resilience and support from women across Delhi who found a safe space with us.
+                Stories of resilience and support from women across India who found a safe space with us.
               </p>
             </div>
           </div>

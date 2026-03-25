@@ -21,7 +21,7 @@ export default function AboutPage() {
               Creating a <span className="text-rose-600">Safe Space</span> for Every Woman.
             </h1>
             <p className="text-lg text-slate-600 leading-relaxed mb-8">
-              VIGIL was born out of a critical need for immediate, accessible, and anonymous support for women in Delhi. Our platform bridges the gap between those in distress and the verified services that can help them.
+              VIGIL was born out of a critical need for immediate, accessible, and anonymous support for women in India. Our platform bridges the gap between those in distress and the verified services that can help them.
             </p>
             <div className="space-y-4">
               {[

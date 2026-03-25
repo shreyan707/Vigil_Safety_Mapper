@@ -22,22 +22,22 @@ async function initializeDatabase() {
           email: "provider@vigil.org",
           password: hashedPassword,
           role: "provider",
-          name: "Delhi Women's NGO"
+          name: "National Women's NGO"
         }
       });
       
       await prisma.service.create({
         data: {
-          name: "Delhi Women's NGO",
+          name: "National Women's NGO",
           type: "NGO",
           description: "Providing legal aid and counseling for women in distress.",
-          address: "Connaught Place, New Delhi",
-          lat: 28.6328,
-          lng: 77.2197,
-          phone: "011-23456789",
-          email: "help@delhingo.org",
+          address: "Mumbai, Maharashtra",
+          lat: 19.0760,
+          lng: 72.8777,
+          phone: "1800-123-4567",
+          email: "help@nationalngo.org",
           hours: "9 AM - 6 PM",
-          languages: "Hindi, English",
+          languages: "Hindi, English, Marathi",
           verified: 1,
           provider_id: provider.id
         }
@@ -45,14 +45,14 @@ async function initializeDatabase() {
 
       await prisma.service.create({
         data: {
-          name: "Central Police Station",
+          name: "National Women's Helpline Center",
           type: "Police",
           description: "24/7 Police assistance and emergency response.",
-          address: "Parliament Street, New Delhi",
-          lat: 28.6289,
-          lng: 77.2144,
+          address: "New Delhi, India",
+          lat: 28.6139,
+          lng: 77.2090,
           phone: "100",
-          email: "cp.delhi@pol.gov.in",
+          email: "helpdesk@police.gov.in",
           hours: "24/7",
           languages: "Hindi, English",
           verified: 1
