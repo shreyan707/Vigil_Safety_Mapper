@@ -28,7 +28,8 @@ export default function Footer() {
                 { name: 'Our Impact', path: '/#impact' },
                 { name: 'Find Local NGOs', path: '/services?type=NGO' },
                 { name: 'Self Defense Tips', path: '/resources' },
-                { name: 'Privacy Policy', path: '/about' }
+                { name: 'Privacy Policy', path: '/about' },
+                { name: 'Provider Login', path: '/login' }
               ].map((item) => (
                 <li key={item.name}>
                   <Link to={item.path} className="text-slate-400 hover:text-rose-500 text-sm transition-colors">{item.name}</Link>

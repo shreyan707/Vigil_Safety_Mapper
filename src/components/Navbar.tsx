@@ -23,7 +23,7 @@ export default function Navbar() {
     { name: 'Find Help', path: '/map' },
     { name: 'Anonymous Request', path: '/request/new' },
     { name: 'Services', path: '/services' },
-    { name: 'Impact', path: '/#impact' },
+    { name: 'Provider Login', path: '/login' },
   ];
 
   return (
