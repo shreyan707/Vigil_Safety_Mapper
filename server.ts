@@ -92,6 +92,45 @@ async function startServer() {
 
   app.post("/api/requests", async (req, res) => {
     const { issue_type, description, location, lat, lng, urgency, contact_preference, contact_info } = req.body;
+    let provider_id = req.body.provider_id || null;
+
+    if (!provider_id && lat && lng) {
+      // Find nearest NGO that has a valid provider account
+      const services = await prisma.service.findMany({
+        where: {
+          lat: { not: null },
+          lng: { not: null },
+          provider_id: { not: null }
+        }
+      });
+
+      let nearestService = null;
+      let minDistance = Infinity;
+
+      for (const service of services) {
+        if (service.lat && service.lng) {
+          const R = 6371; // Earth's radius in km
+          const dLat = (service.lat - lat) * Math.PI / 180;
+          const dLng = (service.lng - lng) * Math.PI / 180;
+          const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat * Math.PI / 180) * Math.cos(service.lat * Math.PI / 180) * 
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          const distance = R * c;
+
+          if (distance < minDistance) {
+            minDistance = distance;
+            nearestService = service;
+          }
+        }
+      }
+
+      if (nearestService && nearestService.provider_id) {
+        provider_id = nearestService.provider_id;
+      }
+    }
+
     const id = Math.random().toString(36).substring(2, 10).toUpperCase();
     await prisma.request.create({
       data: {
@@ -103,7 +142,8 @@ async function startServer() {
         lng,
         urgency,
         contact_preference,
-        contact_info
+        contact_info,
+        provider_id
       }
     });
     res.json({ id });

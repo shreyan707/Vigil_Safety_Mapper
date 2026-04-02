@@ -87,6 +87,58 @@ export default function ProviderRequestDetail() {
     setInternalNote('');
   };
 
+  const defaultLocation = { lat: 20.5937, lng: 78.9629 }; // India center
+  const locationLat = request?.lat ?? defaultLocation.lat;
+  const locationLng = request?.lng ?? defaultLocation.lng;
+
+  const handleEscalate = async () => {
+    if (!request) return;
+    
+    try {
+      setNotes(prev => [{ date: new Date().toLocaleString(), text: "Searching public internet for nearest police jurisdiction..." }, ...prev]);
+        
+      let targetName = 'Local Police Station';
+      let targetEmail = 'emergency@police.gov.in';
+
+      // Search Nominatim for a police station near the coordinates
+      const osmRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=police+station+near+${locationLat},${locationLng}&limit=1`);
+      const osmData = await osmRes.json();
+      
+      if (osmData && osmData.length > 0) {
+        targetName = osmData[0].display_name.split(',')[0];
+      }
+
+      const subject = encodeURIComponent(`URGENT: Escalated Emergency Report #${request.id}`);
+      const body = encodeURIComponent(`URGENT ASSISTANCE REQUIRED
+
+An emergency has been escalated from the VIGIL platform to your station.
+
+Issue Type: ${request.issue_type}
+Urgency Level: ${request.urgency}
+Reported Location: ${request.location || 'Unknown'}
+Coordinates: ${locationLat}, ${locationLng}
+Directions: https://www.google.com/maps/dir/?api=1&destination=${locationLat},${locationLng}
+
+Description / Initial Notes:
+${request.description}
+
+Contact Preference: ${request.contact_preference}
+Contact Info: ${request.contact_info || "Not provided"}
+
+Please investigate immediately. This incident was escalated by a verified VIGIL service provider (${new Date().toLocaleString()}).`);
+
+      window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
+
+      setNotes(prev => [
+        { date: new Date().toLocaleString(), text: `Incident formally escalated to: ${targetName}.` },
+        ...prev
+      ]);
+    } catch (err) {
+      console.error("Escalation failed", err);
+      alert("Failed to process escalation. Please fall back to a manual emergency call (100).");
+    }
+  };
+
   if (loading || !request) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -94,10 +146,6 @@ export default function ProviderRequestDetail() {
       </div>
     );
   }
-
-  const defaultLocation = { lat: 20.5937, lng: 78.9629 }; // India center
-  const locationLat = request.lat ?? defaultLocation.lat;
-  const locationLng = request.lng ?? defaultLocation.lng;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -147,7 +195,10 @@ export default function ProviderRequestDetail() {
             </>
           )}
 
-          <button className="bg-rose-100 text-rose-600 px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-rose-200 transition-colors flex items-center gap-2">
+          <button 
+            onClick={handleEscalate}
+            className="bg-rose-100 text-rose-600 px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-rose-200 transition-colors flex items-center gap-2"
+          >
             <ShieldAlert className="w-4 h-4" /> Escalate
           </button>
         </div>

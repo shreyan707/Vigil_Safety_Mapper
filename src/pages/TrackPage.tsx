@@ -53,11 +53,27 @@ export default function TrackPage() {
     );
   }
 
+  const isAssigned = request.provider_id != null;
+
   const steps = [
-    { label: 'Submitted', status: 'completed', date: request.created_at },
-    { label: 'Assigned', status: request.status !== 'New' ? 'completed' : 'pending' },
-    { label: 'In Progress', status: request.status === 'In Progress' || request.status === 'Resolved' ? 'completed' : 'pending' },
-    { label: 'Resolved', status: request.status === 'Resolved' ? 'completed' : 'pending' },
+    {
+      label: isAssigned ? 'Submitted' : 'Submitted but not assigned',
+      status: 'completed',
+      date: request.created_at
+    },
+    {
+      label: 'Assigned',
+      status: isAssigned ? 'completed' : 'pending',
+      date: isAssigned ? request.created_at : undefined
+    },
+    {
+      label: 'In Progress',
+      status: request.status === 'In Progress' || request.status === 'Resolved' ? 'completed' : 'pending'
+    },
+    {
+      label: 'Resolved',
+      status: request.status === 'Resolved' ? 'completed' : 'pending'
+    },
   ];
 
   return (
@@ -70,13 +86,13 @@ export default function TrackPage() {
           <div className="relative z-10">
             <div className="text-emerald-200 text-xs font-black uppercase tracking-widest mb-2">Request Submitted Successfully</div>
             <h1 className="text-3xl font-black mb-6">Track Your Request</h1>
-            
+
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between border border-white/20">
               <div>
                 <div className="text-[10px] text-emerald-200 font-bold uppercase tracking-widest mb-1">Your Request ID</div>
                 <div className="text-xl font-mono font-black tracking-tighter">{id}</div>
               </div>
-              <button 
+              <button
                 onClick={handleCopy}
                 className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
               >
@@ -94,7 +110,7 @@ export default function TrackPage() {
           <div className="md:col-span-2 space-y-8">
             <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-slate-100">
               <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-10">Status Timeline</h3>
-              
+
               <div className="space-y-12">
                 {steps.map((step, idx) => (
                   <div key={idx} className="flex gap-6 relative">
@@ -141,8 +157,8 @@ export default function TrackPage() {
                   <span className={cn(
                     "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest",
                     request.urgency === 'Urgent' ? "bg-rose-100 text-rose-600" :
-                    request.urgency === 'High' ? "bg-amber-100 text-amber-600" :
-                    "bg-slate-100 text-slate-600"
+                      request.urgency === 'High' ? "bg-amber-100 text-amber-600" :
+                        "bg-slate-100 text-slate-600"
                   )}>
                     {request.urgency}
                   </span>
