@@ -77,7 +77,7 @@ export default function Footer() {
 
         <div className="pt-10 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-slate-500 text-xs">
-            © 2024 VIGIL Initiative. All Rights Reserved.
+            © 2026 VIGIL Initiative. All Rights Reserved.
           </p>
           <div className="flex items-center gap-6">
             <a href="#" className="text-slate-500 hover:text-white transition-colors"><Globe className="w-5 h-5" /></a>

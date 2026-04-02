@@ -1,14 +1,14 @@
 import React from 'react';
-import { 
-  MapPin, 
-  Phone, 
-  Heart, 
-  Shield, 
-  Globe, 
-  Clock, 
-  Users, 
-  MessageSquare, 
-  ArrowRight 
+import {
+  MapPin,
+  Phone,
+  Heart,
+  Shield,
+  Globe,
+  Clock,
+  Users,
+  MessageSquare,
+  ArrowRight
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
@@ -55,7 +55,7 @@ export default function LandingPage() {
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-rose-50 to-transparent -z-10 hidden lg:block" />
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-rose-100/50 rounded-full blur-3xl -z-10" />
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -72,7 +72,7 @@ export default function LandingPage() {
                 <span className="text-rose-600">Help is Here.</span>
               </h1>
               <p className="text-lg text-slate-600 mb-10 max-w-lg leading-relaxed">
-                Dedicated emergency support and service mapping for women in India. 
+                Dedicated emergency support and service mapping for women in India.
                 Immediate intervention is just a click or call away.
               </p>
 
@@ -104,18 +104,18 @@ export default function LandingPage() {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] border border-rose-500/30 rounded-full animate-[spin_20s_linear_infinite]" />
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border border-rose-500/20 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
                   </div>
-                  
+
                   <div className="z-10 text-center px-8">
                     <div className="w-20 h-20 bg-rose-600/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-rose-500/30">
                       <MapPin className="w-10 h-10 text-rose-500" />
                     </div>
-                    <div className="text-xs font-bold text-rose-500 uppercase tracking-[0.2em] mb-2">System Protected</div>
+                    <div className="text-xs font-bold text-rose-500 uppercase tracking-[0.2em] mb-2">protection For You</div>
                     <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter">Empowered<br />Safe Zone</h3>
-                    <div className="mt-12 text-[10px] text-slate-500 font-mono uppercase tracking-widest">Visualizing 256-bit Encryption</div>
+
                   </div>
                 </div>
               </div>
-              
+
               <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-3">
                 <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
                   <Shield className="w-6 h-6 text-emerald-600" />
@@ -134,7 +134,7 @@ export default function LandingPage() {
       <section id="find-help" className="py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-8">
-            <motion.div 
+            <motion.div
               whileHover={{ y: -5 }}
               className="bg-white p-8 rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 group"
             >
@@ -151,7 +151,7 @@ export default function LandingPage() {
               </Link>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               whileHover={{ y: -5 }}
               className="bg-white p-8 rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 group"
             >
@@ -181,7 +181,7 @@ export default function LandingPage() {
 
           <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white bg-rose-100 h-[500px] flex items-center justify-center">
             <AsciiShield />
-            
+
             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-rose-600/5 backdrop-blur-[2px]">
               <Link to="/map" className="bg-white hover:bg-slate-50 text-slate-900 font-bold px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-3 transition-transform hover:scale-105">
                 <MapPin className="w-6 h-6 text-rose-600" />
@@ -197,7 +197,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
             {IMPACT_STATS.map((stat, idx) => (
-              <motion.div 
+              <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -230,7 +230,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {TESTIMONIALS.map((t, idx) => (
-              <motion.div 
+              <motion.div
                 key={idx}
                 whileHover={{ y: -5 }}
                 className="bg-white p-8 rounded-3xl shadow-xl shadow-rose-100/50 border border-rose-50 relative overflow-hidden"
