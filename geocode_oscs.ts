@@ -77,7 +77,7 @@ async function main() {
         const data = await response.json();
         await sleep(1200); // Strict Rate Limit Respect
 
-        if (data && data.length > 0) {
+        if (Array.isArray(data) && data.length > 0) {
           lat = parseFloat(data[0].lat);
           lng = parseFloat(data[0].lon);
           break; // Stop searching if we found a hit!
