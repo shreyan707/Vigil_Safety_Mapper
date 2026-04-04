@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Shield, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
-import { motion } from 'motion/react';
+import { setStoredSession } from '@/src/lib/session';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -18,18 +18,17 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
       const data = await res.json();
-      
+
       if (res.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        navigate('/provider/dashboard');
+        setStoredSession(data.token, data.user);
+        navigate(data.user.role === 'admin' ? '/admin/dashboard' : '/provider/dashboard');
       } else {
         setError(data.error || 'Login failed');
       }
-    } catch (err) {
+    } catch (_error) {
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -37,80 +36,86 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen pt-32 pb-20 bg-slate-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-10">
-          <Link to="/" className="inline-flex items-center gap-2 mb-8">
-            <div className="w-12 h-12 bg-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-200">
-              <Shield className="text-white w-7 h-7" />
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 pb-20 pt-32">
+      <div className="w-full max-w-md">
+        <div className="mb-10 text-center">
+          <Link to="/" className="mb-8 inline-flex items-center gap-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-600 shadow-lg shadow-rose-200">
+              <Shield className="h-7 w-7 text-white" />
             </div>
             <span className="text-2xl font-black tracking-tight text-slate-900">VIGIL</span>
           </Link>
-          <h1 className="text-3xl font-black text-slate-900 mb-2">Provider Login</h1>
-          <p className="text-slate-500">Access your dashboard to manage help requests.</p>
+          <h1 className="mb-2 text-3xl font-black text-slate-900">Dashboard Login</h1>
+          <p className="text-slate-500">Sign in as a provider or admin to access your control panel.</p>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
+        <div className="rounded-[2.5rem] border border-slate-100 bg-white p-8 shadow-xl shadow-slate-200/50 md:p-10">
           {error && (
-            <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-sm font-bold">
-              <AlertCircle className="w-5 h-5 shrink-0" />
+            <div className="mb-6 flex items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-bold text-rose-600">
+              <AlertCircle className="h-5 w-5 shrink-0" />
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input 
+                <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <input
                   required
                   type="email"
-                  placeholder="provider@vigil.org"
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 font-medium"
+                  placeholder="provider@vigil.org or admin@vigil.org"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 font-medium focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                   value={formData.email}
-                  onChange={e => setFormData({...formData, email: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Password</label>
-                <Link to="/forgot-password" title="Forgot Password" className="text-[10px] font-black text-rose-600 uppercase tracking-widest hover:underline">Forgot?</Link>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Password</label>
+                <Link to="/forgot-password" title="Forgot Password" className="text-[10px] font-black uppercase tracking-widest text-rose-600 hover:underline">
+                  Forgot?
+                </Link>
               </div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input 
+                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <input
                   required
                   type="password"
-                  placeholder="••••••••"
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 font-medium"
+                  placeholder="********"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 font-medium focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                   value={formData.password}
-                  onChange={e => setFormData({...formData, password: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
               </div>
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-5 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 py-5 font-black text-white shadow-xl transition-all hover:bg-slate-800 disabled:opacity-50"
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white" />
               ) : (
                 <>
-                  Login to Dashboard
-                  <ArrowRight className="w-5 h-5" />
+                  Continue to Dashboard
+                  <ArrowRight className="h-5 w-5" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-10 pt-8 border-t border-slate-100 text-center">
-            <p className="text-xs text-slate-400 leading-relaxed">
-              VIGIL Provider accounts are created by administrators. If you are an NGO or helpline wanting to join, please <Link to="/about" className="text-rose-600 font-bold hover:underline">contact us</Link>.
+          <div className="mt-10 border-t border-slate-100 pt-8 text-center">
+            <p className="text-xs leading-relaxed text-slate-400">
+              Provider accounts are created by administrators. If you need onboarding help, please{' '}
+              <Link to="/about" className="font-bold text-rose-600 hover:underline">
+                contact us
+              </Link>
+              .
             </p>
           </div>
         </div>

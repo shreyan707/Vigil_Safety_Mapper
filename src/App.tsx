@@ -13,21 +13,31 @@ import AboutPage from './pages/AboutPage';
 import ResourcesPage from './pages/ResourcesPage';
 import ResourceDetailPage from './pages/ResourceDetailPage';
 import LoginPage from './pages/LoginPage';
+import AdminLayout from './components/AdminLayout';
 import ProviderLayout from './components/ProviderLayout';
 import ProviderDashboard from './pages/provider/Dashboard';
 import ProviderRequests from './pages/provider/Requests';
 import ProviderRequestDetail from './pages/provider/RequestDetail';
 import ProviderProfile from './pages/provider/Profile';
 import ProviderStats from './pages/provider/Stats';
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminProviders from './pages/admin/Providers';
+import AdminProviderForm from './pages/admin/ProviderForm';
+import AdminRequests from './pages/admin/Requests';
+import AdminAnalytics from './pages/admin/Analytics';
+import AdminUsers from './pages/admin/Users';
+import AdminSettingsPage from './pages/admin/Settings';
+import AdminLogs from './pages/admin/Logs';
 
 function App() {
   const location = useLocation();
   const isProviderPage = location.pathname.startsWith('/provider');
+  const isAdminPage = location.pathname.startsWith('/admin');
   const isMap = location.pathname === '/map';
   const isLogin = location.pathname === '/login';
 
   // Hide Navbar and Footer on Dashboard and Map (Map has its own sidebar)
-  const showNavFooter = !isProviderPage && !isMap && !isLogin;
+  const showNavFooter = !isProviderPage && !isAdminPage && !isMap && !isLogin;
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-rose-100 selection:text-rose-900">
@@ -52,6 +62,18 @@ function App() {
           <Route path="requests/:id" element={<ProviderRequestDetail />} />
           <Route path="profile" element={<ProviderProfile />} />
           <Route path="stats" element={<ProviderStats />} />
+        </Route>
+
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="providers" element={<AdminProviders />} />
+          <Route path="providers/new" element={<AdminProviderForm />} />
+          <Route path="providers/:id/edit" element={<AdminProviderForm />} />
+          <Route path="requests" element={<AdminRequests />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="logs" element={<AdminLogs />} />
         </Route>
       </Routes>
 
