@@ -9,5 +9,6 @@ coverage/
 
 /src/generated/prisma
 
-.sfdx
 supabase password.txt
+
+.sfdx

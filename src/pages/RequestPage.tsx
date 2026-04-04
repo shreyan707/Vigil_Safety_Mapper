@@ -13,11 +13,38 @@ export default function RequestPage() {
     issue_type: '',
     description: '',
     location: '',
+    lat: null as number | null,
+    lng: null as number | null,
     urgency: 'Medium',
     contact_preference: 'None',
     contact_info: ''
   });
   const [loading, setLoading] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setFormData({
+          ...formData,
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          location: `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`
+        });
+        setDetectingLocation(false);
+      },
+      () => {
+        alert("Unable to retrieve your location");
+        setDetectingLocation(false);
+      }
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,13 +138,24 @@ export default function RequestPage() {
 
             {/* Location */}
             <div className="space-y-2">
-              <label className="text-sm font-black text-slate-400 uppercase tracking-widest">Current Location / Area</label>
+              <label className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                <span>Current Location / Area</span>
+                <button 
+                  type="button" 
+                  onClick={handleDetectLocation} 
+                  disabled={detectingLocation}
+                  className="text-xs text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50"
+                >
+                  <MapPin className="w-3 h-3" />
+                  {detectingLocation ? 'Detecting...' : 'Detect Auto'}
+                </button>
+              </label>
               <div className="relative">
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input 
                   required
                   type="text"
-                  placeholder="e.g. Connaught Place, New Delhi"
+                  placeholder="e.g. MG Road, Bengaluru"
                   className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 font-medium"
                   value={formData.location}
                   onChange={e => setFormData({...formData, location: e.target.value})}

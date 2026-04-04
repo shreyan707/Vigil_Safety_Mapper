@@ -15,6 +15,7 @@ model User {
   name     String?
   services Service[]
   requests Request[]
+  notes    RequestNote[]
 
   @@map("users")
 }
@@ -31,6 +32,7 @@ model Service {
   email       String?
   hours       String?
   languages   String?
+  service_tags String?
   verified    Int?    @default(0)
   provider_id Int?
   provider    User?   @relation(fields: [provider_id], references: [id])
@@ -50,8 +52,24 @@ model Request {
   contact_info       String?
   status             String?  @default("New")
   created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  resolved_at        DateTime?
   provider_id        Int?
   provider           User?    @relation(fields: [provider_id], references: [id])
+  notes              RequestNote[]
 
   @@map("requests")
+}
+
+model RequestNote {
+  id         Int      @id @default(autoincrement())
+  request_id String
+  provider_id Int?
+  text       String
+  kind       String?  @default("provider")
+  created_at DateTime @default(now())
+  request    Request  @relation(fields: [request_id], references: [id], onDelete: Cascade)
+  provider   User?    @relation(fields: [provider_id], references: [id])
+
+  @@map("request_notes")
 }
