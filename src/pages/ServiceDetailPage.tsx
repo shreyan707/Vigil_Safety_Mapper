@@ -128,28 +128,30 @@ export default function ServiceDetailPage() {
             </div>
 
             {/* Map Section */}
-            <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-slate-100 h-96 relative">
-              <MapContainer 
-                center={[service.lat, service.lng]} 
-                zoom={15} 
-                style={{ height: '100%', width: '100%' }}
-                className="z-0"
-              >
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <Marker position={[service.lat, service.lng]} />
-              </MapContainer>
-              <div className="absolute bottom-6 right-6 z-10">
-                <a 
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${service.lat},${service.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-white text-slate-900 font-bold px-6 py-3 rounded-xl shadow-2xl flex items-center gap-2 hover:bg-slate-50 transition-all border border-slate-100"
+            {service.lat != null && service.lng != null && (
+              <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-slate-100 h-96 relative">
+                <MapContainer 
+                  center={[service.lat, service.lng]} 
+                  zoom={15} 
+                  style={{ height: '100%', width: '100%' }}
+                  className="z-0"
                 >
-                  <Navigation className="w-5 h-5 text-rose-600" />
-                  Get Directions
-                </a>
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <Marker position={[service.lat, service.lng]} />
+                </MapContainer>
+                <div className="absolute bottom-6 right-6 z-10">
+                  <a 
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${service.lat},${service.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white text-slate-900 font-bold px-6 py-3 rounded-xl shadow-2xl flex items-center gap-2 hover:bg-slate-50 transition-all border border-slate-100"
+                  >
+                    <Navigation className="w-5 h-5 text-rose-600" />
+                    Get Directions
+                  </a>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Sidebar Actions */}

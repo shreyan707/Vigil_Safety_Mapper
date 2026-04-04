@@ -22,8 +22,9 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Find Help', path: '/map' },
     { name: 'Anonymous Request', path: '/request/new' },
+    { name: 'Track Request', path: '/track' },
     { name: 'Services', path: '/services' },
-    { name: 'Impact', path: '/#impact' },
+    { name: 'Provider Login', path: '/login' },
   ];
 
   return (

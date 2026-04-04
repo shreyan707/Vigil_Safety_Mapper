@@ -43,7 +43,7 @@ export default function ServicesPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
             <h1 className="text-4xl font-black text-slate-900 mb-2">Service Directory</h1>
-            <p className="text-slate-500">Find verified support services across Delhi.</p>
+            <p className="text-slate-500">Find verified support services across India.</p>
           </div>
           <Link to="/map" className="inline-flex items-center gap-2 text-rose-600 font-bold hover:underline">
             <MapPin className="w-5 h-5" />
