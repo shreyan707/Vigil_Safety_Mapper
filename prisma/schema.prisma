@@ -8,34 +8,41 @@ datasource db {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  email    String?   @unique
-  password String?
-  role     String?
-  name     String?
-  services Service[]
-  requests Request[]
-  notes    RequestNote[]
+  id            Int            @id @default(autoincrement())
+  email         String?        @unique
+  password      String?
+  role          String?
+  name          String?
+  is_active     Boolean        @default(true)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  services      Service[]
+  requests      Request[]
+  notes         RequestNote[]
+  login_history LoginHistory[]
+  audit_logs    AuditLog[]
 
   @@map("users")
 }
 
 model Service {
-  id          Int     @id @default(autoincrement())
-  name        String?
-  type        String?
-  description String?
-  address     String?
-  lat         Float?
-  lng         Float?
-  phone       String?
-  email       String?
-  hours       String?
-  languages   String?
+  id           Int      @id @default(autoincrement())
+  name         String?
+  type         String?
+  description  String?
+  address      String?
+  lat          Float?
+  lng          Float?
+  phone        String?
+  email        String?
+  hours        String?
+  languages    String?
   service_tags String?
-  verified    Int?    @default(0)
-  provider_id Int?
-  provider    User?   @relation(fields: [provider_id], references: [id])
+  verified     Int?     @default(0)
+  provider_id  Int?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  provider     User?    @relation(fields: [provider_id], references: [id])
 
   @@map("services")
 }
@@ -62,14 +69,51 @@ model Request {
 }
 
 model RequestNote {
-  id         Int      @id @default(autoincrement())
-  request_id String
+  id          Int      @id @default(autoincrement())
+  request_id  String
   provider_id Int?
-  text       String
-  kind       String?  @default("provider")
-  created_at DateTime @default(now())
-  request    Request  @relation(fields: [request_id], references: [id], onDelete: Cascade)
-  provider   User?    @relation(fields: [provider_id], references: [id])
+  text        String
+  kind        String?  @default("provider")
+  created_at  DateTime @default(now())
+  request     Request  @relation(fields: [request_id], references: [id], onDelete: Cascade)
+  provider    User?    @relation(fields: [provider_id], references: [id])
 
   @@map("request_notes")
+}
+
+model AuditLog {
+  id            Int      @id @default(autoincrement())
+  actor_user_id Int?
+  actor_name    String?
+  action        String
+  entity_type   String
+  entity_id     String?
+  description   String?
+  metadata      Json?
+  created_at    DateTime @default(now())
+  actor         User?    @relation(fields: [actor_user_id], references: [id])
+
+  @@map("audit_logs")
+}
+
+model LoginHistory {
+  id         Int      @id @default(autoincrement())
+  user_id    Int?
+  email      String?
+  success    Boolean  @default(false)
+  ip_address String?
+  user_agent String?
+  created_at DateTime @default(now())
+  user       User?    @relation(fields: [user_id], references: [id])
+
+  @@map("login_history")
+}
+
+model SystemSetting {
+  key        String   @id
+  value      Json
+  updated_at DateTime @default(now())
+  updated_by Int?
+
+  @@map("system_settings")
 }
