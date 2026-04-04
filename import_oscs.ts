@@ -32,7 +32,7 @@ async function main() {
 
     // If line ends with a date, or contains a date at the end
     if (/\d{2}\.\d{2}\.\d{4}$/.test(line) || /^\d{2}\.\d{2}\.\d{4}$/.test(line) || /sakhi/.test(line) && currentBlock.length > 4) {
-       // Wait, some lines might not end exactly with date due to truncation, but let's try to match date
+      
        if (/\d{2}\.\d{2}\.\d{4}/.test(line)) {
           // Process block
           const fullText = currentBlock.join(' ');
