@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { User as UserType } from '@/src/types';
+import { ProviderProfile as ProviderProfileType, User as UserType } from '@/src/types';
 import { Save, User, MapPin, Clock, Languages, ShieldCheck, Upload, Briefcase } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
@@ -29,9 +29,9 @@ function LocationMarker({ position, setPosition }: { position: [number, number],
 export default function ProviderProfile() {
   const { user } = useOutletContext<{ user: UserType }>();
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [success, setSuccess] = useState(false);
-  
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProviderProfileType>({
     name: user.name || '',
     email: user.email || '',
     phone: '',
@@ -44,10 +44,40 @@ export default function ProviderProfile() {
       domesticViolence: true,
       harassment: true,
       legalAid: false,
-      counseling: true,
-      medicalEmergency: false
-    }
+        counseling: true,
+        medicalEmergency: false
+      }
   });
+  const [savedProfile, setSavedProfile] = useState<ProviderProfileType>(formData);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setInitialLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/provider/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          throw new Error('Failed to load profile');
+        }
+
+        const data = await res.json();
+        setFormData(data);
+        setSavedProfile(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -66,13 +96,45 @@ export default function ProviderProfile() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Mock save
-    setTimeout(() => {
+    const token = localStorage.getItem('token');
+
+    try {
+      const res = await fetch('/api/provider/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to save profile');
+      }
+
+      const data = await res.json();
+      setFormData(data.profile);
+      setSavedProfile(data.profile);
+
+      localStorage.setItem('user', JSON.stringify(data.user));
+      window.dispatchEvent(new Event('provider-user-updated'));
+
       setLoading(false);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    }, 1000);
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+    }
   };
+
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -211,7 +273,11 @@ export default function ProviderProfile() {
         </div>
 
         <div className="flex items-center justify-end gap-4">
-          <button type="button" className="px-6 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-colors">
+          <button
+            type="button"
+            onClick={() => setFormData(savedProfile)}
+            className="px-6 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-colors"
+          >
             Cancel
           </button>
           <button 

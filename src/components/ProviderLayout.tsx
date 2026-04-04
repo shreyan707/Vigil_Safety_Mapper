@@ -4,8 +4,6 @@ import {
   BarChart3, 
   Inbox, 
   User, 
-  PieChart as PieChartIcon,
-  Settings,
   LogOut,
   TrendingUp
 } from 'lucide-react';
@@ -18,15 +16,24 @@ export default function ProviderLayout() {
   const [user, setUser] = useState<UserType | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (!token || !userData) {
-      navigate('/login');
-      return;
-    }
+    const syncUser = () => {
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
 
-    setUser(JSON.parse(userData));
+      if (!token || !userData) {
+        navigate('/login');
+        return;
+      }
+
+      setUser(JSON.parse(userData));
+    };
+
+    syncUser();
+    window.addEventListener('provider-user-updated', syncUser);
+
+    return () => {
+      window.removeEventListener('provider-user-updated', syncUser);
+    };
   }, [navigate]);
 
   const handleLogout = () => {

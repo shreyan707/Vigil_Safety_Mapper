@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  MapPin, 
-  Clock, 
-  Phone, 
-  MessageSquare, 
+import {
+  ArrowLeft,
+  MapPin,
+  Clock,
+  Phone,
+  MessageSquare,
   AlertTriangle,
   CheckCircle2,
-  MoreVertical,
   ShieldAlert
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { HelpRequest } from '@/src/types';
+import { HelpRequest, RequestNote } from '@/src/types';
 import { cn } from '@/src/lib/utils';
 
-// Fix for default marker icon in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -31,21 +29,42 @@ export default function ProviderRequestDetail() {
   const [request, setRequest] = useState<HelpRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [internalNote, setInternalNote] = useState('');
-  const [notes, setNotes] = useState<{date: string, text: string}[]>([]);
+  const [notes, setNotes] = useState<RequestNote[]>([]);
+  const [savingNote, setSavingNote] = useState(false);
+
+  const fetchNotes = async (token: string) => {
+    const res = await fetch(`/api/provider/requests/${id}/notes`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to load notes');
+    }
+
+    const notesData = await res.json();
+    setNotes(notesData);
+  };
 
   useEffect(() => {
     const fetchRequest = async () => {
       const token = localStorage.getItem('token');
+
       try {
-        const res = await fetch(`/api/requests/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error("Not found");
-        const data = await res.json();
-        setRequest(data);
-        
-        // Mock notes for now since we don't have a notes table
-        setNotes([
-          { date: new Date(data.created_at).toLocaleString(), text: 'Request received and automatically assigned based on proximity.' }
+        if (!token) {
+          throw new Error('Unauthorized');
+        }
+
+        const [requestRes] = await Promise.all([
+          fetch(`/api/requests/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetchNotes(token),
         ]);
+
+        if (!requestRes.ok) {
+          throw new Error('Not found');
+        }
+
+        const data = await requestRes.json();
+        setRequest(data);
       } catch (err) {
         console.error(err);
         navigate('/provider/requests');
@@ -53,57 +72,80 @@ export default function ProviderRequestDetail() {
         setLoading(false);
       }
     };
+
     fetchRequest();
   }, [id, navigate]);
 
   const handleStatusUpdate = async (newStatus: string) => {
     const token = localStorage.getItem('token');
     try {
-      await fetch(`/api/requests/${id}`, {
+      const res = await fetch(`/api/requests/${id}`, {
         method: 'PATCH',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ status: newStatus })
       });
+
+      if (!res.ok) {
+        throw new Error('Failed to update status');
+      }
+
       setRequest(prev => prev ? { ...prev, status: newStatus as any } : null);
-      
-      setNotes(prev => [
-        { date: new Date().toLocaleString(), text: `Status updated to ${newStatus}.` },
-        ...prev
-      ]);
+      if (token) {
+        await fetchNotes(token);
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     if (!internalNote.trim()) return;
-    setNotes(prev => [
-      { date: new Date().toLocaleString(), text: internalNote },
-      ...prev
-    ]);
-    setInternalNote('');
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setSavingNote(true);
+    try {
+      const res = await fetch(`/api/provider/requests/${id}/notes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ text: internalNote.trim() })
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to save note');
+      }
+
+      const note = await res.json();
+      setNotes(prev => [note, ...prev]);
+      setInternalNote('');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingNote(false);
+    }
   };
 
-  const defaultLocation = { lat: 20.5937, lng: 78.9629 }; // India center
+  const defaultLocation = { lat: 20.5937, lng: 78.9629 };
   const locationLat = request?.lat ?? defaultLocation.lat;
   const locationLng = request?.lng ?? defaultLocation.lng;
 
   const handleEscalate = async () => {
     if (!request) return;
-    
+
     try {
-      setNotes(prev => [{ date: new Date().toLocaleString(), text: "Searching public internet for nearest police jurisdiction..." }, ...prev]);
-        
       let targetName = 'Local Police Station';
       let targetEmail = 'emergency@police.gov.in';
 
-      // Search Nominatim for a police station near the coordinates
       const osmRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=police+station+near+${locationLat},${locationLng}&limit=1`);
       const osmData = await osmRes.json();
-      
+
       if (osmData && osmData.length > 0) {
         targetName = osmData[0].display_name.split(',')[0];
       }
@@ -129,13 +171,21 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
 
       window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
 
-      setNotes(prev => [
-        { date: new Date().toLocaleString(), text: `Incident formally escalated to: ${targetName}.` },
-        ...prev
-      ]);
+      const token = localStorage.getItem('token');
+      if (token) {
+        await fetch(`/api/provider/requests/${id}/notes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ text: `Incident formally escalated to: ${targetName}.` })
+        });
+        await fetchNotes(token);
+      }
     } catch (err) {
-      console.error("Escalation failed", err);
-      alert("Failed to process escalation. Please fall back to a manual emergency call (100).");
+      console.error('Escalation failed', err);
+      alert('Failed to process escalation. Please fall back to a manual emergency call (100).');
     }
   };
 
@@ -147,9 +197,19 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
     );
   }
 
+  const timelineNotes = notes.length > 0
+    ? notes
+    : [{
+        id: 0,
+        request_id: request.id,
+        provider_id: null,
+        text: 'Request submitted.',
+        kind: 'system',
+        created_at: request.created_at,
+      } as RequestNote];
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link to="/provider/requests" className="p-2 bg-white rounded-xl border border-slate-200 text-slate-400 hover:text-slate-900 shadow-sm transition-colors">
@@ -159,10 +219,10 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-2xl font-black text-slate-900">Request {request.id}</h1>
               <span className={cn(
-                "px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border",
-                request.status === 'New' ? "bg-rose-50 border-rose-200 text-rose-600" :
-                request.status === 'In Progress' ? "bg-amber-50 border-amber-200 text-amber-600" :
-                "bg-emerald-50 border-emerald-200 text-emerald-600"
+                'px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border',
+                request.status === 'New' ? 'bg-rose-50 border-rose-200 text-rose-600' :
+                request.status === 'In Progress' ? 'bg-amber-50 border-amber-200 text-amber-600' :
+                'bg-emerald-50 border-emerald-200 text-emerald-600'
               )}>
                 {request.status}
               </span>
@@ -176,7 +236,7 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
         <div className="flex items-center gap-3">
           {request.status !== 'Resolved' && (
             <>
-              <select 
+              <select
                 value={request.status}
                 onChange={(e) => handleStatusUpdate(e.target.value)}
                 className="bg-white border border-slate-200 text-sm font-bold text-slate-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-rose-500/20 outline-none shadow-sm cursor-pointer"
@@ -185,8 +245,8 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
                 <option value="In Progress">Mark: In Progress</option>
                 <option value="Resolved">Mark: Resolved</option>
               </select>
-              
-              <button 
+
+              <button
                 onClick={() => handleStatusUpdate('Resolved')}
                 className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm shadow-emerald-200 hover:bg-emerald-700 transition-colors flex items-center gap-2"
               >
@@ -195,7 +255,7 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
             </>
           )}
 
-          <button 
+          <button
             onClick={handleEscalate}
             className="bg-rose-100 text-rose-600 px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-rose-200 transition-colors flex items-center gap-2"
           >
@@ -205,9 +265,7 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Details */}
         <div className="col-span-2 space-y-8">
-          {/* Info Card */}
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
             <div className="flex items-center justify-between mb-8 pb-8 border-b border-slate-100">
               <div className="flex items-center gap-4">
@@ -219,14 +277,14 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
                   <div className="text-xl font-black text-slate-900">{request.issue_type}</div>
                 </div>
               </div>
-              
+
               <div className="text-right">
                 <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Urgency Level</div>
                 <div className={cn(
-                  "inline-block px-3 py-1 rounded-lg text-sm font-black uppercase tracking-widest",
-                  request.urgency === 'Urgent' ? "bg-rose-100 text-rose-600" :
-                  request.urgency === 'High' ? "bg-amber-100 text-amber-600" :
-                  "bg-slate-100 text-slate-600"
+                  'inline-block px-3 py-1 rounded-lg text-sm font-black uppercase tracking-widest',
+                  request.urgency === 'Urgent' ? 'bg-rose-100 text-rose-600' :
+                  request.urgency === 'High' ? 'bg-amber-100 text-amber-600' :
+                  'bg-slate-100 text-slate-600'
                 )}>
                   {request.urgency}
                 </div>
@@ -259,7 +317,6 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
             </div>
           </div>
 
-          {/* Internal Notes */}
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
             <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-slate-400" /> Internal Notes & Timeline
@@ -274,21 +331,21 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
                 onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
                 className="flex-grow bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all"
               />
-              <button 
+              <button
                 onClick={handleAddNote}
-                disabled={!internalNote.trim()}
+                disabled={!internalNote.trim() || savingNote}
                 className="bg-slate-900 text-white px-6 py-3 rounded-xl text-sm font-bold disabled:opacity-50 hover:bg-slate-800 transition-colors"
               >
-                Save
+                {savingNote ? 'Saving...' : 'Save'}
               </button>
             </div>
 
             <div className="space-y-6 relative before:absolute before:top-4 before:bottom-4 before:left-[11px] before:w-0.5 before:bg-slate-100">
-              {notes.map((note, idx) => (
-                <div key={idx} className="relative pl-8">
+              {timelineNotes.map((note, idx) => (
+                <div key={`${note.id}-${idx}`} className="relative pl-8">
                   <div className="absolute left-0 top-1.5 w-6 h-6 rounded-full bg-white border-4 border-slate-100 z-10" />
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <div className="text-xs font-bold text-slate-400 mb-2">{note.date}</div>
+                    <div className="text-xs font-bold text-slate-400 mb-2">{new Date(note.created_at).toLocaleString()}</div>
                     <p className="text-sm text-slate-700 font-medium">{note.text}</p>
                   </div>
                 </div>
@@ -297,20 +354,18 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
           </div>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-8">
-          {/* Location Map */}
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
             <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-slate-400" /> Location Details
             </h3>
-            
+
             <p className="text-sm text-slate-600 mb-6 font-medium">{request.location}</p>
 
             <div className="h-48 rounded-2xl overflow-hidden border border-slate-100 bg-slate-50">
-              <MapContainer 
-                center={[locationLat, locationLng]} 
-                zoom={14} 
+              <MapContainer
+                center={[locationLat, locationLng]}
+                zoom={14}
                 className="w-full h-full z-0"
               >
                 <TileLayer
@@ -322,8 +377,8 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
                 </Marker>
               </MapContainer>
             </div>
-            
-            <a 
+
+            <a
               href={`https://www.google.com/maps/dir/?api=1&destination=${locationLat},${locationLng}`}
               target="_blank"
               rel="noreferrer"
@@ -332,7 +387,6 @@ Please investigate immediately. This incident was escalated by a verified VIGIL 
               <MapPin className="w-4 h-4" /> Get Directions
             </a>
           </div>
-
         </div>
       </div>
     </div>
