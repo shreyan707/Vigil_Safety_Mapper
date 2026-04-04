@@ -11,6 +11,7 @@ import TrackingSearchPage from './pages/TrackingSearchPage';
 import TrackPage from './pages/TrackPage';
 import AboutPage from './pages/AboutPage';
 import ResourcesPage from './pages/ResourcesPage';
+import ResourceDetailPage from './pages/ResourceDetailPage';
 import LoginPage from './pages/LoginPage';
 import ProviderLayout from './components/ProviderLayout';
 import ProviderDashboard from './pages/provider/Dashboard';
@@ -42,6 +43,7 @@ function App() {
         <Route path="/request/track/:id" element={<TrackPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/resources/:slug" element={<ResourceDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         
         <Route path="/provider" element={<ProviderLayout />}>
