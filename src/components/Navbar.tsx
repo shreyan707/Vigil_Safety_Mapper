@@ -24,12 +24,12 @@ export default function Navbar() {
     { name: 'Anonymous Request', path: '/request/new' },
     { name: 'Track Request', path: '/track' },
     { name: 'Services', path: '/services' },
-    { name: 'Provider Login', path: '/login' },
+    { name: 'Login', path: '/login' },
   ];
 
   return (
     <>
-      <header 
+      <header
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
           scrolled ? "bg-white/90 backdrop-blur-md shadow-sm py-3" : "bg-transparent py-5"
@@ -46,8 +46,8 @@ export default function Navbar() {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              <Link 
-                key={link.name} 
+              <Link
+                key={link.name}
                 to={link.path}
                 className="text-sm font-medium text-slate-600 hover:text-rose-600 transition-colors"
               >
@@ -57,14 +57,14 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={handleQuickExit}
               className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95"
             >
               <X className="w-4 h-4" />
               Quick Exit
             </button>
-            <button 
+            <button
               className="md:hidden p-2 text-slate-600"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
@@ -77,7 +77,7 @@ export default function Navbar() {
       {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -85,8 +85,8 @@ export default function Navbar() {
           >
             <nav className="flex flex-col gap-6">
               {navLinks.map((link) => (
-                <Link 
-                  key={link.name} 
+                <Link
+                  key={link.name}
                   to={link.path}
                   onClick={() => setIsMenuOpen(false)}
                   className="text-2xl font-semibold text-slate-900"

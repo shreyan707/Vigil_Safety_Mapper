@@ -1016,8 +1016,26 @@ async function startServer() {
   });
 
   app.get("/api/requests/:id", async (req, res) => {
-    const request = await prisma.request.findUnique({ where: { id: req.params.id } });
-    res.json(request);
+    const request = await prisma.request.findUnique({
+      where: { id: req.params.id },
+      include: {
+        provider: {
+          select: { name: true },
+        },
+      },
+    });
+    
+    if (!request) {
+      return res.status(404).json({ error: "Request not found" });
+    }
+
+    // Attach provider name for the frontend
+    const responseData = {
+      ...request,
+      providerName: request.provider?.name || null,
+    };
+    
+    res.json(responseData);
   });
 
   app.get("/api/provider/dashboard", authenticate, requireRole("provider"), async (req: AuthenticatedRequest, res) => {

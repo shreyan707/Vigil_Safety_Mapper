@@ -173,6 +173,21 @@ export default function TrackPage() {
               </div>
             </div>
 
+            {request.providerName && (
+              <div className="bg-rose-50 rounded-[2rem] p-8 border border-rose-100">
+                <h3 className="text-sm font-black text-rose-600 uppercase tracking-widest mb-4">Assigned Provider</h3>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm shrink-0 border border-rose-100">
+                    <Shield className="w-6 h-6 text-rose-600" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 leading-tight mb-1">{request.providerName}</div>
+                    <div className="text-xs text-rose-600 font-medium">Verified Support Center</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-100">
               <div className="flex items-center gap-3 text-rose-600 mb-4">
                 <Clock className="w-5 h-5" />

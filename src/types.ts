@@ -29,6 +29,7 @@ export interface HelpRequest {
   updated_at?: string;
   resolved_at?: string | null;
   provider_id?: number;
+  providerName?: string | null;
 }
 
 export interface User {
