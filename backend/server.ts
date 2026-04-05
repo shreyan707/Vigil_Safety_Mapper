@@ -1,4 +1,5 @@
 import express from "express";
+import fs from "fs";
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
@@ -2131,7 +2132,7 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.resolve(__dirname, "../../frontend/dist");
-    if (require('fs').existsSync(distPath)) {
+    if (fs.existsSync(distPath)) {
       app.use(express.static(distPath));
       app.get("*", (_req, res) => {
         res.sendFile(path.resolve(distPath, "index.html"));
