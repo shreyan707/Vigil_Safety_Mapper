@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
 import { createServer as createViteServer } from "vite";
 import { PrismaClient } from "@prisma/client";
 import path from "path";
@@ -2128,23 +2130,31 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.resolve(__dirname, "../frontend/dist");
-    app.use(express.static(distPath));
-    app.get("*", (_req, res) => {
-      res.sendFile(path.resolve(distPath, "index.html"));
-    });
+    const distPath = path.resolve(__dirname, "../../frontend/dist");
+    if (require('fs').existsSync(distPath)) {
+      app.use(express.static(distPath));
+      app.get("*", (_req, res) => {
+        res.sendFile(path.resolve(distPath, "index.html"));
+      });
+    } else {
+      app.get("/", (_req, res) => {
+        res.json({ status: "VIGIL API is running", mode: "headless" });
+      });
+    }
   }
 
   const PORT = Number(process.env.PORT) || 3000;
   const HOST = '0.0.0.0';
 
-  await ensureDatabaseStructure();
-  await initializeDatabase();
-
   app.listen(PORT, HOST, () => {
     console.log(`Server running on http://${HOST}:${PORT}`);
     console.log(`Admin login: admin@vigil.org / ${DEFAULT_ADMIN_PASSWORD}`);
     console.log(`Provider login: provider@vigil.org / ${DEFAULT_PROVIDER_PASSWORD}`);
+    
+    // Background initialization
+    ensureDatabaseStructure()
+      .then(() => initializeDatabase())
+      .catch(err => console.error("DB Initialization failed:", err));
   });
 }
 

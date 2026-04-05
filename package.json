@@ -2,9 +2,16 @@
   "name": "vigil",
   "private": true,
   "description": "VIGIL - Nationwide Safety Platform",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "dev": "npm run dev --prefix frontend & npm run dev --prefix backend",
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\"",
     "install:all": "npm install && npm install --prefix frontend && npm install --prefix backend",
     "prisma:generate": "npm run postinstall --prefix backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
