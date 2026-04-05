@@ -913,18 +913,63 @@ async function startServer() {
     });
   });
 
-  app.get("/api/services", async (_req, res) => {
-    const services = await prisma.service.findMany({
-      where: {
-        OR: [
-          { provider_id: null },
-          { provider: { is_active: true } },
-        ],
-      },
-      orderBy: [{ verified: "desc" }, { name: "asc" }],
-    });
+  app.get("/api/services", async (req, res) => {
+    const isAll = req.query.all === "true";
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 12;
+    const skip = (page - 1) * pageSize;
+    const serviceType = req.query.type as string;
+    const search = req.query.search as string;
 
-    res.json(services);
+    const where: any = {
+      OR: [
+        { provider_id: null },
+        { provider: { is_active: true } },
+      ],
+    };
+
+    if (serviceType && serviceType !== "All") {
+      where.type = serviceType;
+    }
+
+    if (search && search.trim()) {
+      const query = search.trim();
+      where.AND = [
+        {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { address: { contains: query, mode: "insensitive" } },
+            { description: { contains: query, mode: "insensitive" } },
+          ],
+        },
+      ];
+    }
+
+    if (isAll) {
+      const services = await prisma.service.findMany({
+        where,
+        orderBy: [{ verified: "desc" }, { name: "asc" }],
+      });
+      return res.json(services);
+    }
+
+    const [services, totalCount] = await Promise.all([
+      prisma.service.findMany({
+        where,
+        orderBy: [{ verified: "desc" }, { name: "asc" }],
+        skip,
+        take: pageSize,
+      }),
+      prisma.service.count({ where }),
+    ]);
+
+    res.json({
+      services,
+      totalCount,
+      page,
+      pageSize,
+      totalPages: Math.ceil(totalCount / pageSize),
+    });
   });
 
   app.get("/api/services/:id", async (req, res) => {

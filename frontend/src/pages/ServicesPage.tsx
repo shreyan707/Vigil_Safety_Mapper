@@ -7,35 +7,49 @@ import { cn } from '@/src/lib/utils';
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
-  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('All');
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 12;
 
-  useEffect(() => {
-    fetch('/api/services')
-      .then(res => res.json())
-      .then(data => {
-        setServices(data);
-        setFilteredServices(data);
-        setLoading(false);
+  const fetchServices = async (page: number) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        type: selectedType,
+        search: searchQuery
       });
-  }, []);
+      const res = await fetch(`/api/services?${params.toString()}`);
+      const data = await res.json();
+      setServices(data.services || []);
+      setTotalPages(data.totalPages || 1);
+    } catch (err) {
+      console.error("Failed to fetch services", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let filtered = services;
-    if (selectedType !== 'All') {
-      filtered = filtered.filter(s => s.type === selectedType);
-    }
-    if (searchQuery) {
-      filtered = filtered.filter(s => 
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    setFilteredServices(filtered);
-  }, [searchQuery, selectedType, services]);
+    const timeoutId = setTimeout(() => {
+      fetchServices(currentPage);
+    }, 300); // Debounce search
+    return () => clearTimeout(timeoutId);
+  }, [currentPage, selectedType, searchQuery]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedType(e.target.value);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="pt-32 pb-20 min-h-screen bg-slate-50">
@@ -61,14 +75,14 @@ export default function ServicesPage() {
                 placeholder="Search services, areas, or keywords..."
                 className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-50"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
               />
             </div>
             <div>
               <select 
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-50 font-medium text-slate-600"
                 value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                onChange={handleTypeChange}
               >
                 <option value="All">All Service Types</option>
                 <option value="NGO">NGOs & Support Groups</option>
@@ -92,7 +106,7 @@ export default function ServicesPage() {
               <div key={i} className="bg-white rounded-3xl p-8 h-64 animate-pulse border border-slate-100" />
             ))}
           </div>
-        ) : filteredServices.length === 0 ? (
+        ) : services.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-[3rem] border border-slate-100">
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
               <Search className="w-10 h-10 text-slate-200" />
@@ -102,7 +116,7 @@ export default function ServicesPage() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredServices.map(service => (
+            {services.map(service => (
               <motion.div 
                 key={service.id}
                 whileHover={{ y: -5 }}
@@ -161,20 +175,46 @@ export default function ServicesPage() {
           </div>
         )}
 
-        {/* Pagination Placeholder */}
-        <div className="mt-16 flex items-center justify-center gap-4">
-          <button className="p-3 rounded-xl border border-slate-200 text-slate-400 hover:bg-white transition-all disabled:opacity-50" disabled>
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-2">
-            <button className="w-10 h-10 rounded-xl bg-rose-600 text-white font-bold text-sm">1</button>
-            <button className="w-10 h-10 rounded-xl hover:bg-white text-slate-600 font-bold text-sm">2</button>
-            <button className="w-10 h-10 rounded-xl hover:bg-white text-slate-600 font-bold text-sm">3</button>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-16 flex items-center justify-center gap-4">
+            <button 
+              className="p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-rose-600 hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400" 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1))
+                .map((p, i, arr) => (
+                  <React.Fragment key={p}>
+                    {i > 0 && arr[i-1] !== p - 1 && <span className="text-slate-300">...</span>}
+                    <button 
+                      onClick={() => setCurrentPage(p)}
+                      className={cn(
+                        "w-10 h-10 rounded-xl font-bold text-sm transition-all",
+                        currentPage === p 
+                          ? "bg-rose-600 text-white shadow-lg shadow-rose-100" 
+                          : "hover:bg-white text-slate-600 border border-transparent hover:border-slate-200"
+                      )}
+                    >
+                      {p}
+                    </button>
+                  </React.Fragment>
+                ))
+              }
+            </div>
+            <button 
+              className="p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-rose-600 hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
-          <button className="p-3 rounded-xl border border-slate-200 text-slate-400 hover:bg-white transition-all">
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Filter, Search, MapPin, Navigation, Info, Phone, ExternalLink, Shield } from 'lucide-react';
+import { Filter, Search, MapPin, Navigation, Info, Phone, ExternalLink, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Service } from '@/src/types';
 import { cn } from '@/src/lib/utils';
@@ -42,40 +42,64 @@ function LocationMarker() {
 }
 
 export default function MapPage() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
+  const [mapServices, setMapServices] = useState<Service[]>([]); // ALL services for markers
+  const [sidebarServices, setSidebarServices] = useState<Service[]>([]); // Paginated for sidebar
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('All');
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 10;
 
+  // Fetch ALL for map markers (only once)
   useEffect(() => {
-    fetch('/api/services')
+    fetch('/api/services?all=true')
       .then(res => res.json())
-      .then(data => {
-        setServices(data);
-        setFilteredServices(data);
-        setLoading(false);
-      });
+      .then(data => setMapServices(data));
   }, []);
 
+  // Fetch paginated/filtered for sidebar
+  const fetchSidebarServices = async (page: number) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        type: selectedType,
+        search: searchQuery
+      });
+      const res = await fetch(`/api/services?${params.toString()}`);
+      const data = await res.json();
+      setSidebarServices(data.services || []);
+      setTotalPages(data.totalPages || 1);
+    } catch (err) {
+      console.error("Failed to fetch sidebar services", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let filtered = services;
-    if (selectedType !== 'All') {
-      filtered = filtered.filter(s => s.type === selectedType);
-    }
-    if (searchQuery) {
-      filtered = filtered.filter(s => 
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.address.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    setFilteredServices(filtered);
-  }, [searchQuery, selectedType, services]);
+    const timeoutId = setTimeout(() => {
+      fetchSidebarServices(currentPage);
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [currentPage, selectedType, searchQuery]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleTypeChange = (type: string) => {
+    setSelectedType(type);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="h-screen pt-16 flex flex-col md:flex-row overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-full md:w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col z-10">
+      <aside className="w-full md:w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col z-10 max-h-[40vh] md:max-h-none">
         <div className="p-6 border-b border-slate-100">
           <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
             <Filter className="w-5 h-5 text-rose-600" />
@@ -89,7 +113,7 @@ export default function MapPage() {
               placeholder="Search by name or area..."
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
             />
           </div>
 
@@ -97,7 +121,7 @@ export default function MapPage() {
             {['All', 'NGO', 'Police', 'Helpline', 'SafeZone'].map(type => (
               <button
                 key={type}
-                onClick={() => setSelectedType(type)}
+                onClick={() => handleTypeChange(type)}
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
                   selectedType === type 
@@ -116,53 +140,83 @@ export default function MapPage() {
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600" />
             </div>
-          ) : filteredServices.length === 0 ? (
+          ) : sidebarServices.length === 0 ? (
             <div className="text-center py-12">
               <Info className="w-12 h-12 text-slate-200 mx-auto mb-4" />
               <p className="text-slate-500 text-sm">No services found matching your criteria.</p>
             </div>
           ) : (
-            filteredServices.map(service => (
-              <div 
-                key={service.id}
-                className="p-4 rounded-2xl border border-slate-100 hover:border-rose-200 hover:shadow-lg hover:shadow-rose-50 transition-all group cursor-pointer"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <span className={cn(
-                    "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider",
-                    service.type === 'NGO' ? "bg-rose-100 text-rose-700" :
-                    service.type === 'Police' ? "bg-blue-100 text-blue-700" :
-                    service.type === 'Helpline' ? "bg-pink-100 text-pink-700" :
-                    "bg-emerald-100 text-emerald-700"
-                  )}>
-                    {service.type}
+            <>
+              {sidebarServices.map(service => (
+                <div 
+                  key={service.id}
+                  className="p-4 rounded-2xl border border-slate-100 hover:border-rose-200 hover:shadow-lg hover:shadow-rose-50 transition-all group cursor-pointer"
+                  onClick={() => {
+                    // Logic to zoom to marker can go here if lat/lng exists
+                  }}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider",
+                      service.type === 'NGO' ? "bg-rose-100 text-rose-700" :
+                      service.type === 'Police' ? "bg-blue-100 text-blue-700" :
+                      service.type === 'Helpline' ? "bg-pink-100 text-pink-700" :
+                      "bg-emerald-100 text-emerald-700"
+                    )}>
+                      {service.type}
+                    </span>
+                    {service.verified === 1 && (
+                      <Shield className="w-4 h-4 text-emerald-500" fill="currentColor" fillOpacity={0.2} />
+                    )}
+                  </div>
+                  <h3 className="font-bold text-slate-900 mb-1 group-hover:text-rose-600 transition-colors">{service.name}</h3>
+                  <p className="text-xs text-slate-500 mb-3 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {service.address}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <a 
+                      href={`tel:${service.phone}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-grow flex items-center justify-center gap-2 bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                    >
+                      <Phone className="w-3 h-3" />
+                      Call
+                    </a>
+                    <Link 
+                      to={`/services/${service.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-2 bg-slate-50 hover:bg-rose-600 text-slate-400 hover:text-white rounded-lg transition-all"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+
+              {/* Sidebar Pagination */}
+              {totalPages > 1 && (
+                <div className="pt-4 pb-6 border-t border-slate-100 flex items-center justify-between">
+                  <button 
+                    className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-rose-600 disabled:opacity-30 transition-colors"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    Page {currentPage} of {totalPages}
                   </span>
-                  {service.verified === 1 && (
-                    <Shield className="w-4 h-4 text-emerald-500" fill="currentColor" fillOpacity={0.2} />
-                  )}
-                </div>
-                <h3 className="font-bold text-slate-900 mb-1 group-hover:text-rose-600 transition-colors">{service.name}</h3>
-                <p className="text-xs text-slate-500 mb-3 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {service.address}
-                </p>
-                <div className="flex items-center gap-2">
-                  <a 
-                    href={`tel:${service.phone}`}
-                    className="flex-grow flex items-center justify-center gap-2 bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                  <button 
+                    className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-rose-600 disabled:opacity-30 transition-colors"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   >
-                    <Phone className="w-3 h-3" />
-                    Call
-                  </a>
-                  <Link 
-                    to={`/services/${service.id}`}
-                    className="p-2 bg-slate-50 hover:bg-rose-600 text-slate-400 hover:text-white rounded-lg transition-all"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
-              </div>
-            ))
+              )}
+            </>
           )}
         </div>
       </aside>
@@ -180,7 +234,7 @@ export default function MapPage() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <LocationMarker />
-          {filteredServices.filter(s => s.lat != null && s.lng != null).map(service => (
+          {mapServices.filter(s => s.lat != null && s.lng != null).map(service => (
             <Marker 
               key={service.id} 
               position={[service.lat, service.lng]}
