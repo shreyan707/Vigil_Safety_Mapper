@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Filter, Search, MapPin, Navigation, Info, Phone, ExternalLink, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Filter, Search, MapPin, Navigation, Info, Phone, ExternalLink, Shield, ChevronLeft, ChevronRight, Home, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Service } from '@/src/types';
 import { cn } from '@/src/lib/utils';
 
@@ -23,25 +23,38 @@ const SERVICE_COLORS: Record<string, string> = {
   SafeZone: '#059669', // emerald-600
 };
 
-function LocationMarker() {
-  const [position, setPosition] = useState<L.LatLng | null>(null);
+const userLocationIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+interface LocationMarkerProps {
+  position: L.LatLng | null;
+  onPositionChange: (pos: L.LatLng) => void;
+}
+
+function LocationMarker({ position, onPositionChange }: LocationMarkerProps) {
   const map = useMap();
 
   useEffect(() => {
-    map.locate().on("locationfound", function (e) {
-      setPosition(e.latlng);
-      map.flyTo(e.latlng, map.getZoom());
-    });
-  }, [map]);
+    if (position) {
+      map.flyTo(position, 15);
+    }
+  }, [position, map]);
 
   return position === null ? null : (
-    <Marker position={position}>
+    <Marker position={position} icon={userLocationIcon}>
       <Popup>You are here</Popup>
     </Marker>
   );
 }
 
 export default function MapPage() {
+  const navigate = useNavigate();
   const [mapServices, setMapServices] = useState<Service[]>([]); // ALL services for markers
   const [sidebarServices, setSidebarServices] = useState<Service[]>([]); // Paginated for sidebar
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,6 +62,9 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [userLocation, setUserLocation] = useState<L.LatLng | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const pageSize = 10;
 
   // Fetch ALL for map markers (only once)
@@ -86,6 +102,46 @@ export default function MapPage() {
     return () => clearTimeout(timeoutId);
   }, [currentPage, selectedType, searchQuery]);
 
+  const handleMyLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setLocationLoading(true);
+    setLocationError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const newPos = new L.LatLng(latitude, longitude);
+        setUserLocation(newPos);
+        setLocationLoading(false);
+      },
+      (error) => {
+        setLocationLoading(false);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            setLocationError('Location permission denied. Please allow location access in your browser settings.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            setLocationError('Location information is unavailable.');
+            break;
+          case error.TIMEOUT:
+            setLocationError('Location request timed out.');
+            break;
+          default:
+            setLocationError('An unknown error occurred.');
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1);
@@ -97,7 +153,7 @@ export default function MapPage() {
   };
 
   return (
-    <div className="h-screen pt-16 flex flex-col md:flex-row overflow-hidden">
+    <div className="h-screen flex flex-col md:flex-row overflow-hidden">
       {/* Sidebar */}
       <aside className="w-full md:w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col z-10 max-h-[40vh] md:max-h-none">
         <div className="p-6 border-b border-slate-100">
@@ -233,7 +289,7 @@ export default function MapPage() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <LocationMarker />
+          <LocationMarker position={userLocation} onPositionChange={setUserLocation} />
           {mapServices.filter(s => s.lat != null && s.lng != null).map(service => (
             <Marker 
               key={service.id} 
@@ -271,14 +327,42 @@ export default function MapPage() {
         <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
           <button 
             className="p-3 bg-white shadow-xl rounded-2xl text-slate-600 hover:text-rose-600 transition-all border border-slate-100"
-            title="My Location"
-            onClick={() => {
-              // Location logic is handled by LocationMarker component
-            }}
+            title="Home"
+            onClick={() => navigate('/')}
           >
-            <Navigation className="w-5 h-5" />
+            <Home className="w-5 h-5" />
+          </button>
+          <button 
+            className={cn(
+              "p-3 shadow-xl rounded-2xl transition-all border border-slate-100",
+              locationLoading ? "bg-slate-100 text-slate-400 cursor-wait" : "bg-white text-slate-600 hover:text-rose-600"
+            )}
+            title="My Location"
+            onClick={handleMyLocation}
+            disabled={locationLoading}
+          >
+            {locationLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Navigation className="w-5 h-5" />
+            )}
           </button>
         </div>
+
+        {/* Location Error Toast */}
+        {locationError && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-3 rounded-xl shadow-lg z-20 flex items-center gap-2 max-w-xs">
+            <Info className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{locationError}</span>
+            <button 
+              onClick={() => setLocationError(null)}
+              className="ml-2 hover:bg-red-600 rounded p-1"
+            >
+              <span className="sr-only">Close</span>
+              <span>&times;</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

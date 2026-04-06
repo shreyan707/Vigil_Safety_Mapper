@@ -65,7 +65,7 @@ export default function LoginPage() {
                 <input
                   required
                   type="email"
-                  placeholder="provider@vigil.org or admin@vigil.org"
+                  placeholder="provider@vigil.org"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 font-medium focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
